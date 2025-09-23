@@ -8,14 +8,11 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 find_package(PkgConfig REQUIRED)
 find_package(Threads REQUIRED)
 
-# Find libmongocxx
-find_package(mongocxx REQUIRED)
-
 # Find Redis client
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(HIREDIS REQUIRED hiredis)
 
-# Find WebRTC libraries
+# Find WebRTC libraries (optional)
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(WEBRTC webrtc)
 
@@ -45,17 +42,16 @@ add_executable(voice_server ${SOURCES})
 # Link libraries
 target_link_libraries(voice_server
     ${CMAKE_THREAD_LIBS_INIT}
-    ${MONGOCXX_LIBRARIES}
     ${HIREDIS_LIBRARIES}
     ${WEBRTC_LIBRARIES}
     pthread
     ssl
     crypto
     opus
-    json
     uv
     boost_system
     boost_thread
+    curl
 )
 
 # Compiler flags
@@ -71,7 +67,6 @@ target_compile_options(voice_server PRIVATE
 
 # Include directories for libraries
 target_include_directories(voice_server PRIVATE
-    ${MONGOCXX_INCLUDE_DIRS}
     ${HIREDIS_INCLUDE_DIRS}
     ${WEBRTC_INCLUDE_DIRS}
     /usr/include/opus

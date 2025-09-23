@@ -12,7 +12,8 @@ config :text_channels, TextChannelsWeb.Endpoint,
     ip: {0, 0, 0, 0, 0, 0, 0, 0},
     port: String.to_integer(System.get_env("PHOENIX_PORT") || "4000")
   ],
-  secret_key_base: {:system, "PHOENIX_SECRET_KEY_BASE"}
+  secret_key_base: {:system, "PHOENIX_SECRET_KEY_BASE"},
+  server: true
 
 # Configures Swoosh API Client
 config :swoosh, api_client: Swoosh.ApiClient.Finch, finch_name: TextChannels.Finch

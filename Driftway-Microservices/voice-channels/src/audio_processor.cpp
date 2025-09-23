@@ -1,27 +1,47 @@
 #include <iostream>
 #include <vector>
 #include <cstring>
+#include "audio_processor.h"
 
-class AudioProcessor {
-public:
-    static std::vector<uint8_t> processAudio(const std::vector<uint8_t>& input) {
-        // Simple passthrough for now
-        std::cout << "Processing audio data of size: " << input.size() << std::endl;
-        return input;
+namespace driftway {
+
+AudioProcessor::AudioProcessor() {
+    std::cout << "AudioProcessor initialized" << std::endl;
+}
+
+AudioProcessor::~AudioProcessor() {
+    std::cout << "AudioProcessor destroyed" << std::endl;
+}
+
+void AudioProcessor::processAudioFrame(const std::vector<uint8_t>& frame) {
+    std::cout << "Processing audio frame of size: " << frame.size() << std::endl;
+}
+
+std::vector<uint8_t> AudioProcessor::encodeOpus(const std::vector<float>& audio_data) {
+    std::cout << "Encoding " << audio_data.size() << " samples to Opus" << std::endl;
+    // Mock encoding - return dummy data
+    return std::vector<uint8_t>(audio_data.size(), 0x42);
+}
+
+std::vector<float> AudioProcessor::decodeOpus(const std::vector<uint8_t>& encoded_data) {
+    std::cout << "Decoding " << encoded_data.size() << " bytes from Opus" << std::endl;
+    // Mock decoding - return dummy data
+    return std::vector<float>(encoded_data.size(), 0.5f);
+}
+
+void AudioProcessor::applyEchoCancellation(std::vector<float>& audio_data) {
+    std::cout << "Applying echo cancellation to " << audio_data.size() << " samples" << std::endl;
+}
+
+void AudioProcessor::applyNoiseReduction(std::vector<float>& audio_data) {
+    std::cout << "Applying noise reduction to " << audio_data.size() << " samples" << std::endl;
+}
+
+void AudioProcessor::applyVolumeControl(std::vector<float>& audio_data, float volume_level) {
+    std::cout << "Applying volume control (" << volume_level << ") to " << audio_data.size() << " samples" << std::endl;
+    for (auto& sample : audio_data) {
+        sample *= volume_level;
     }
-    
-    static std::vector<uint8_t> mixAudio(const std::vector<std::vector<uint8_t>>& inputs) {
-        if (inputs.empty()) {
-            return {};
-        }
-        
-        // Simple mixing - just return first input for now
-        std::cout << "Mixing " << inputs.size() << " audio streams" << std::endl;
-        return inputs[0];
-    }
-    
-    static bool validateAudioFormat(const std::vector<uint8_t>& data) {
-        // Basic validation
-        return !data.empty() && data.size() > 0;
-    }
-};
+}
+
+} // namespace driftway

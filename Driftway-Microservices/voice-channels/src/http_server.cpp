@@ -2,47 +2,51 @@
 #include <string>
 #include <thread>
 #include <functional>
+#include <chrono>
+#include <ctime>
+#include "http_server.h"
 
-class HTTPServer {
-public:
-    static void start(int port, std::function<void()> callback = nullptr) {
-        std::cout << "Starting HTTP server on port " << port << std::endl;
-        
-        // Simple HTTP server simulation
-        running = true;
-        server_thread = std::thread([port]() {
-            while (running) {
-                std::this_thread::sleep_for(std::chrono::seconds(1));
-                // Simulate handling requests
-            }
-        });
-        
-        if (callback) {
-            callback();
-        }
-    }
-    
-    static void stop() {
+namespace driftway {
+
+HttpServer::HttpServer(int port, VoiceServer* voice_server) 
+    : port_(port), voice_server_(voice_server), running_(false) {
+    std::cout << "HttpServer created on port " << port << std::endl;
+}
+
+HttpServer::~HttpServer() {
+    stop();
+}
+
+void HttpServer::start() {
+    std::cout << "Starting HTTP server on port " << port_ << std::endl;
+    running_ = true;
+    // In a real implementation, this would start the actual HTTP server
+}
+
+void HttpServer::stop() {
+    if (running_) {
         std::cout << "Stopping HTTP server" << std::endl;
-        running = false;
-        if (server_thread.joinable()) {
-            server_thread.join();
-        }
+        running_ = false;
     }
+}
+
+void HttpServer::addRoute(const std::string& path, const std::string& method, 
+                         std::function<std::string(const std::string&)> handler) {
+    std::cout << "Adding route: " << method << " " << path << std::endl;
+}
+
+std::string HttpServer::handleRequest(const std::string& path, const std::string& method, 
+                                     const std::string& body) {
+    std::cout << "Handling request: " << method << " " << path << std::endl;
     
-    static std::string handleHealthCheck() {
+    if (path == "/health") {
         return R"({"status":"healthy","service":"Voice Channels","timestamp":")" + 
                std::to_string(std::time(nullptr)) + R"("})";
-    }
-    
-    static std::string handleVoiceChannels() {
+    } else if (path == "/channels") {
         return R"({"channels":[{"id":1,"name":"General Voice","participants":0}]})";
     }
+    
+    return R"({"error":"Not found"})";
+}
 
-private:
-    static bool running;
-    static std::thread server_thread;
-};
-
-bool HTTPServer::running = false;
-std::thread HTTPServer::server_thread;
+} // namespace driftway

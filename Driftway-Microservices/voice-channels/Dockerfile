@@ -13,8 +13,7 @@ RUN apt-get update && apt-get install -y \
     libuv1-dev \
     nlohmann-json3-dev \
     libhiredis-dev \
-    libmongocxx-dev \
-    libbsoncxx-dev \
+    libcurl4-openssl-dev \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
@@ -38,8 +37,8 @@ RUN apt-get update && apt-get install -y \
     libopus0 \
     libuv1 \
     libhiredis0.14 \
-    libmongocxx3.6.7 \
-    libbsoncxx3.6.7 \
+    libcurl4 \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
@@ -48,10 +47,11 @@ WORKDIR /app
 COPY --from=build /app/build/voice_server .
 
 # Create non-root user
-RUN useradd -r -s /bin/false voice && \
-    chown voice:voice /app/voice_server
+RUN groupadd -r voice || true && \
+    useradd -r -g voice -s /bin/false voiceuser && \
+    chown voiceuser:voice /app/voice_server
 
-USER voice
+USER voiceuser
 
 # Expose ports
 EXPOSE 9090 3478/udp

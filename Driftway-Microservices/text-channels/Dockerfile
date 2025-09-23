@@ -30,8 +30,8 @@ COPY lib lib
 RUN mix compile
 
 # Build assets
-COPY assets/package.json assets/package-lock.json ./assets/
-RUN npm --prefix ./assets ci --progress=false --no-audit --loglevel=error
+COPY assets/package.json ./assets/
+RUN npm --prefix ./assets install --progress=false --no-audit --loglevel=error
 
 COPY assets assets
 RUN npm run --prefix ./assets deploy

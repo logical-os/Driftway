@@ -40,7 +40,7 @@ config :phoenix, :plug_init_mode, :runtime
 
 # Database configuration
 config :text_channels, TextChannels.Repo,
-  database: {:system, "DATABASE_URL", "mongodb://localhost:27017/driftway"}
+  url: {:system, "DATABASE_URL", "mongodb://localhost:27017/driftway"}
 
 # Disable swoosh api client as it is only required for production adapters.
 config :swoosh, :api_client, false

@@ -10,12 +10,11 @@ defmodule TextChannels.Application do
     children = [
       TextChannelsWeb.Telemetry,
       TextChannels.Repo,
-      {DNSCluster, query: Application.get_env(:text_channels, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: TextChannels.PubSub},
       # Start the Finch HTTP client for sending emails
       {Finch, name: TextChannels.Finch},
       # Start Redis connection
-      {Redix, {Application.get_env(:text_channels, :redis)[:url], name: :redix}},
+      {Redix, {System.get_env("REDIS_URL", "redis://redis:6379"), [name: :redix]}},
       # Start a worker by calling: TextChannels.Worker.start_link(arg)
       # {TextChannels.Worker, arg},
       # Start to serve requests, typically the last entry
