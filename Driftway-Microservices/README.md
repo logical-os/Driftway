@@ -1,6 +1,17 @@
-# Driftway Microservices Architecture
+# Driftway Microservices Demo
 
 A modern, scalable messaging backend built with multiple programming languages for optimal performance.
+
+## 🚀 Quick Start (Simple Demo)
+
+**Want to try it right now?** Run the simple demo without installing anything:
+
+```powershell
+# Run the simple demo server
+.\start-demo.ps1
+```
+
+This starts a simplified Go server demonstrating the core API functionality at http://localhost:8080
 
 ## Architecture Overview
 
