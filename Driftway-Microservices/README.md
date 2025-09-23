@@ -2,16 +2,43 @@
 
 A modern, scalable messaging backend built with multiple programming languages for optimal performance.
 
-## 🚀 Quick Start (Simple Demo)
+## 🚀 Quick Start Options
 
-**Want to try it right now?** Run the simple demo without installing anything:
+### Option 1: Test UI (Recommended)
+**Want to try everything with a web interface?**
+
+```powershell
+# Start the test UI server
+cd test-ui
+.\start-server.bat
+```
+
+Then open http://localhost:3000 for a comprehensive testing interface with:
+- Service health monitoring
+- Authentication testing
+- Real-time messaging
+- Voice channel testing
+- API endpoint exploration
+
+### Option 2: Simple Demo Server
+**Want to try the API directly?**
 
 ```powershell
 # Run the simple demo server
 .\start-demo.ps1
 ```
 
-This starts a simplified Go server demonstrating the core API functionality at http://localhost:8080
+This starts a simplified Go server demonstrating the core API functionality at http://localhost:3000
+
+### Option 3: Full Microservices
+**Want to run the complete system?**
+
+```bash
+# Start all services with Docker
+docker-compose up -d
+```
+
+Access the full application at http://localhost (via Nginx load balancer)
 
 ## Architecture Overview
 
@@ -20,17 +47,18 @@ This starts a simplified Go server demonstrating the core API functionality at h
 │   Nginx LB      │────│  API Gateway    │────│   MongoDB       │
 │   (Routing)     │    │     (Go)        │    │  (Database)     │
 └─────────────────┘    └─────────────────┘    └─────────────────┘
-                              │                          │
-                              │                          │
-                    ┌─────────┼─────────┐               │
-                    │                   │               │
-        ┌─────────────────┐   ┌─────────────────┐      │
+                              │                        │
+                              │                        │
+                    ┌─────────┼─────────┐              │
+                    │                   │              │
+        ┌───────────▼─────┐   ┌─────────▼───────┐      │
         │ Text Channels   │   │ Voice Channels  │      │
         │   (Elixir)      │   │     (C++)       │      │
         └─────────────────┘   └─────────────────┘      │
-                    │                   │               │
-                    └─────────┬─────────┘               │
-                              │                         │
+                    │                   │              │
+                    └─────────┬─────────┘              │
+                              │                        │
+                              │                        │
                     ┌─────────────────┐                │
                     │     Redis       │────────────────┘
                     │ (Cache/PubSub)  │
@@ -58,7 +86,18 @@ This starts a simplified Go server demonstrating the core API functionality at h
 - **MongoDB**: Primary data storage
 - **Redis**: Caching and pub/sub messaging
 
-## Quick Start
+### 🧪 Test UI
+- **Port**: 3000
+- **Purpose**: Comprehensive testing interface for all services
+- **Features**: 
+  - Service health monitoring with real-time status indicators
+  - Authentication testing (register, login, JWT management)
+  - Text messaging with WebSocket simulation
+  - Voice channel testing and WebRTC signaling
+  - Custom API endpoint testing with request/response inspection
+  - Activity logging and debugging tools
+
+## Getting Started
 
 ### Prerequisites
 - Docker & Docker Compose

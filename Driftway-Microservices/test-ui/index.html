@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Driftway Microservices Test UI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .fade-enter-active, .fade-leave-active { transition: opacity 0.3s; }
+        .fade-enter-from, .fade-leave-to { opacity: 0; }
+        .slide-enter-active, .slide-leave-active { transition: all 0.3s; }
+        .slide-enter-from { transform: translateY(-10px); opacity: 0; }
+        .slide-leave-to { transform: translateY(10px); opacity: 0; }
+        .message-bubble { animation: slideIn 0.3s ease-out; }
+        @keyframes slideIn {
+            from { transform: translateX(-20px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        .pulse-green { animation: pulse-green 2s infinite; }
+        @keyframes pulse-green {
+            0%, 100% { background-color: rgb(34, 197, 94); }
+            50% { background-color: rgb(22, 163, 74); }
+        }
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+        }
+        .status-connected { background-color: #10b981; }
+        .status-connecting { background-color: #f59e0b; animation: pulse 1s infinite; }
+        .status-disconnected { background-color: #ef4444; }
+        .code-block {
+            background: #1f2937;
+            color: #e5e7eb;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            border-radius: 6px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <div id="app">
+        <!-- Header -->
+        <header class="bg-white shadow-sm border-b">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between items-center py-4">
+                    <div class="flex items-center space-x-4">
+                        <h1 class="text-2xl font-bold text-gray-900">
+                            <i class="fas fa-microchip text-blue-600"></i>
+                            Driftway Test UI
+                        </h1>
+                        <div class="flex items-center space-x-2">
+                            <span class="status-indicator" :class="overallStatus"></span>
+                            <span class="text-sm font-medium" :class="overallStatusText">
+                                {{ overallStatusMessage }}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <div class="text-sm text-gray-500">
+                            <i class="fas fa-user"></i>
+                            {{ currentUser ? currentUser.username : 'Not logged in' }}
+                        </div>
+                        <button 
+                            v-if="!currentUser"
+                            @click="showLogin = true"
+                            class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
+                        >
+                            Login
+                        </button>
+                        <button 
+                            v-if="currentUser"
+                            @click="logout"
+                            class="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700"
+                        >
+                            Logout
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <!-- Configuration Panel -->
+            <div class="bg-white rounded-lg shadow p-6 mb-8">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-2">
+                            <i class="fas fa-cog text-gray-600"></i>
+                            Configuration
+                        </h3>
+                        <p class="text-sm text-gray-600">
+                            Choose your testing mode
+                        </p>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <label class="flex items-center">
+                            <input 
+                                type="radio" 
+                                v-model="useSimulation" 
+                                :value="true"
+                                name="mode"
+                                class="mr-2"
+                            >
+                            <span class="text-sm">
+                                <i class="fas fa-play-circle text-green-600"></i>
+                                Simulation Mode (Recommended)
+                            </span>
+                        </label>
+                        <label class="flex items-center">
+                            <input 
+                                type="radio" 
+                                v-model="useSimulation" 
+                                :value="false"
+                                name="mode"
+                                class="mr-2"
+                            >
+                            <span class="text-sm">
+                                <i class="fas fa-server text-blue-600"></i>
+                                Real Microservices
+                            </span>
+                        </label>
+                    </div>
+                </div>
+                <div class="mt-4 p-3 rounded-md" :class="useSimulation ? 'bg-green-50 border border-green-200' : 'bg-blue-50 border border-blue-200'">
+                    <p class="text-sm" :class="useSimulation ? 'text-green-800' : 'text-blue-800'">
+                        <i class="fas fa-info-circle"></i>
+                        {{ useSimulation ? 'Using simulation server at localhost:3001 - All services are simulated and ready to test!' : 'Using real microservices - Make sure Docker services are running with: docker-compose up -d' }}
+                    </p>
+                </div>
+            </div>
+
+            <!-- Service Status Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <!-- API Gateway Status -->
+                <div class="bg-white rounded-lg shadow p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold text-gray-900">
+                            <i class="fas fa-gateway text-blue-600"></i>
+                            API Gateway
+                        </h3>
+                        <span class="status-indicator" :class="services.apiGateway.status"></span>
+                    </div>
+                    <div class="space-y-2">
+                        <p class="text-sm text-gray-600">Port: 8080</p>
+                        <p class="text-sm" :class="services.apiGateway.statusClass">
+                            {{ services.apiGateway.message }}
+                        </p>
+                        <button 
+                            @click="testService('apiGateway')"
+                            class="w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700"
+                            :disabled="testing.apiGateway"
+                        >
+                            <i class="fas fa-sync" :class="{'fa-spin': testing.apiGateway}"></i>
+                            Test Health
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Text Channels Status -->
+                <div class="bg-white rounded-lg shadow p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold text-gray-900">
+                            <i class="fas fa-comments text-green-600"></i>
+                            Text Channels
+                        </h3>
+                        <span class="status-indicator" :class="services.textChannels.status"></span>
+                    </div>
+                    <div class="space-y-2">
+                        <p class="text-sm text-gray-600">Port: 4000</p>
+                        <p class="text-sm" :class="services.textChannels.statusClass">
+                            {{ services.textChannels.message }}
+                        </p>
+                        <button 
+                            @click="testService('textChannels')"
+                            class="w-full bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700"
+                            :disabled="testing.textChannels"
+                        >
+                            <i class="fas fa-sync" :class="{'fa-spin': testing.textChannels}"></i>
+                            Test Health
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Voice Channels Status -->
+                <div class="bg-white rounded-lg shadow p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold text-gray-900">
+                            <i class="fas fa-microphone text-purple-600"></i>
+                            Voice Channels
+                        </h3>
+                        <span class="status-indicator" :class="services.voiceChannels.status"></span>
+                    </div>
+                    <div class="space-y-2">
+                        <p class="text-sm text-gray-600">Port: 9090</p>
+                        <p class="text-sm" :class="services.voiceChannels.statusClass">
+                            {{ services.voiceChannels.message }}
+                        </p>
+                        <button 
+                            @click="testService('voiceChannels')"
+                            class="w-full bg-purple-600 text-white py-2 px-4 rounded hover:bg-purple-700"
+                            :disabled="testing.voiceChannels"
+                        >
+                            <i class="fas fa-sync" :class="{'fa-spin': testing.voiceChannels}"></i>
+                            Test Health
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabs -->
+            <div class="bg-white rounded-lg shadow mb-8">
+                <div class="border-b border-gray-200">
+                    <nav class="-mb-px flex space-x-8" aria-label="Tabs">
+                        <button
+                            v-for="tab in tabs"
+                            :key="tab.id"
+                            @click="activeTab = tab.id"
+                            :class="[
+                                activeTab === tab.id 
+                                    ? 'border-blue-500 text-blue-600' 
+                                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300',
+                                'whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm'
+                            ]"
+                        >
+                            <i :class="tab.icon + ' mr-2'"></i>
+                            {{ tab.name }}
+                        </button>
+                    </nav>
+                </div>
+
+                <!-- Tab Content -->
+                <div class="p-6">
+                    <!-- Authentication Tab -->
+                    <div v-if="activeTab === 'auth'" class="space-y-6">
+                        <h3 class="text-lg font-semibold mb-4">Authentication Testing</h3>
+                        
+                        <!-- Registration Form -->
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <h4 class="font-medium mb-3">Register New User</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <input 
+                                    v-model="registerForm.username" 
+                                    placeholder="Username" 
+                                    class="border rounded px-3 py-2"
+                                >
+                                <input 
+                                    v-model="registerForm.email" 
+                                    placeholder="Email" 
+                                    type="email"
+                                    class="border rounded px-3 py-2"
+                                >
+                                <input 
+                                    v-model="registerForm.password" 
+                                    placeholder="Password" 
+                                    type="password"
+                                    class="border rounded px-3 py-2"
+                                >
+                            </div>
+                            <button 
+                                @click="register" 
+                                class="mt-3 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+                                :disabled="registering"
+                            >
+                                <i class="fas fa-user-plus" :class="{'fa-spin': registering}"></i>
+                                Register
+                            </button>
+                        </div>
+
+                        <!-- Login Form -->
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <h4 class="font-medium mb-3">Login</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <input 
+                                    v-model="loginForm.email" 
+                                    placeholder="Email" 
+                                    type="email"
+                                    class="border rounded px-3 py-2"
+                                >
+                                <input 
+                                    v-model="loginForm.password" 
+                                    placeholder="Password" 
+                                    type="password"
+                                    class="border rounded px-3 py-2"
+                                >
+                            </div>
+                            <button 
+                                @click="login" 
+                                class="mt-3 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                                :disabled="loggingIn"
+                            >
+                                <i class="fas fa-sign-in-alt" :class="{'fa-spin': loggingIn}"></i>
+                                Login
+                            </button>
+                        </div>
+
+                        <!-- Current Token Display -->
+                        <div v-if="authToken" class="bg-gray-50 p-4 rounded-lg">
+                            <h4 class="font-medium mb-3">Current JWT Token</h4>
+                            <div class="code-block p-3">
+                                <code class="text-xs break-all">{{ authToken }}</code>
+                            </div>
+                            <button 
+                                @click="testAuthenticatedEndpoint" 
+                                class="mt-3 bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700"
+                            >
+                                <i class="fas fa-shield-alt"></i>
+                                Test Protected Endpoint
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Text Messaging Tab -->
+                    <div v-if="activeTab === 'text'" class="space-y-6">
+                        <div class="flex justify-between items-center">
+                            <h3 class="text-lg font-semibold">Text Messaging</h3>
+                            <div class="flex items-center space-x-2">
+                                <span class="status-indicator" :class="websocketStatus"></span>
+                                <span class="text-sm">WebSocket: {{ websocketMessage }}</span>
+                                <button 
+                                    @click="toggleWebSocket"
+                                    :class="[
+                                        websocket ? 'bg-red-600 hover:bg-red-700' : 'bg-green-600 hover:bg-green-700',
+                                        'text-white px-4 py-2 rounded text-sm'
+                                    ]"
+                                >
+                                    {{ websocket ? 'Disconnect' : 'Connect' }}
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Channel Selection -->
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <h4 class="font-medium mb-3">Channels</h4>
+                            <div class="flex flex-wrap gap-2">
+                                <button
+                                    v-for="channel in channels"
+                                    :key="channel.id"
+                                    @click="selectChannel(channel)"
+                                    :class="[
+                                        currentChannel?.id === channel.id 
+                                            ? 'bg-blue-600 text-white' 
+                                            : 'bg-white text-gray-700 hover:bg-gray-100',
+                                        'px-3 py-2 rounded border text-sm'
+                                    ]"
+                                >
+                                    # {{ channel.name }}
+                                </button>
+                                <button 
+                                    @click="loadChannels" 
+                                    class="bg-gray-600 text-white px-3 py-2 rounded text-sm hover:bg-gray-700"
+                                >
+                                    <i class="fas fa-sync"></i>
+                                    Refresh
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Message Area -->
+                        <div v-if="currentChannel" class="bg-white border rounded-lg">
+                            <!-- Messages -->
+                            <div class="h-64 overflow-y-auto p-4 space-y-2 bg-gray-50">
+                                <div
+                                    v-for="message in messages"
+                                    :key="message.id"
+                                    class="message-bubble p-2 bg-white rounded shadow-sm"
+                                >
+                                    <div class="flex justify-between items-start">
+                                        <div class="flex-1">
+                                            <span class="font-medium text-sm text-blue-600">
+                                                {{ message.username || message.user_id }}
+                                            </span>
+                                            <p class="text-sm text-gray-800 mt-1">{{ message.content }}</p>
+                                        </div>
+                                        <span class="text-xs text-gray-500">
+                                            {{ formatTime(message.created_at) }}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div v-if="messages.length === 0" class="text-center text-gray-500 py-8">
+                                    No messages yet. Send the first one!
+                                </div>
+                            </div>
+
+                            <!-- Message Input -->
+                            <div class="border-t p-4">
+                                <div class="flex space-x-2">
+                                    <input 
+                                        v-model="newMessage" 
+                                        @keyup.enter="sendMessage"
+                                        placeholder="Type a message..." 
+                                        class="flex-1 border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    >
+                                    <button 
+                                        @click="sendMessage" 
+                                        class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                                        :disabled="!newMessage.trim() || !currentChannel"
+                                    >
+                                        <i class="fas fa-paper-plane"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div v-else class="text-center py-8 text-gray-500">
+                            Select a channel to start messaging
+                        </div>
+                    </div>
+
+                    <!-- Voice Channels Tab -->
+                    <div v-if="activeTab === 'voice'" class="space-y-6">
+                        <h3 class="text-lg font-semibold">Voice Communication</h3>
+                        
+                        <!-- Voice Channels -->
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <h4 class="font-medium mb-3">Voice Channels</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div
+                                    v-for="voiceChannel in voiceChannels"
+                                    :key="voiceChannel.id"
+                                    class="bg-white border rounded-lg p-4"
+                                >
+                                    <div class="flex justify-between items-start mb-2">
+                                        <h5 class="font-medium">🎤 {{ voiceChannel.name }}</h5>
+                                        <span class="text-sm text-gray-500">
+                                            {{ voiceChannel.current_participants }}/{{ voiceChannel.max_participants }}
+                                        </span>
+                                    </div>
+                                    <p class="text-sm text-gray-600 mb-3">Bitrate: {{ voiceChannel.bitrate }}</p>
+                                    <button 
+                                        @click="joinVoiceChannel(voiceChannel)"
+                                        class="w-full bg-purple-600 text-white py-2 px-4 rounded hover:bg-purple-700"
+                                        :disabled="!currentUser"
+                                    >
+                                        <i class="fas fa-headphones"></i>
+                                        Join Channel
+                                    </button>
+                                </div>
+                            </div>
+                            <button 
+                                @click="loadVoiceChannels" 
+                                class="mt-3 bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700"
+                            >
+                                <i class="fas fa-sync"></i>
+                                Refresh Channels
+                            </button>
+                        </div>
+
+                        <!-- WebRTC Testing -->
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <h4 class="font-medium mb-3">WebRTC Connection Test</h4>
+                            <div class="space-y-3">
+                                <button 
+                                    @click="testWebRTC" 
+                                    class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+                                >
+                                    <i class="fas fa-signal"></i>
+                                    Test WebRTC Signaling
+                                </button>
+                                <div v-if="webrtcLog.length > 0" class="code-block p-3">
+                                    <div v-for="log in webrtcLog" :key="log.timestamp" class="text-xs">
+                                        <span class="text-gray-400">[{{ formatTime(log.timestamp) }}]</span>
+                                        <span :class="log.type === 'error' ? 'text-red-400' : 'text-green-400'">
+                                            {{ log.message }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- API Testing Tab -->
+                    <div v-if="activeTab === 'api'" class="space-y-6">
+                        <h3 class="text-lg font-semibold">API Endpoint Testing</h3>
+                        
+                        <!-- Custom API Request -->
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <h4 class="font-medium mb-3">Custom API Request</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+                                <select v-model="apiRequest.method" class="border rounded px-3 py-2">
+                                    <option>GET</option>
+                                    <option>POST</option>
+                                    <option>PUT</option>
+                                    <option>DELETE</option>
+                                </select>
+                                <input 
+                                    v-model="apiRequest.endpoint" 
+                                    placeholder="/api/endpoint" 
+                                    class="border rounded px-3 py-2 md:col-span-2"
+                                >
+                                <button 
+                                    @click="sendApiRequest" 
+                                    class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                                    :disabled="sendingRequest"
+                                >
+                                    <i class="fas fa-paper-plane" :class="{'fa-spin': sendingRequest}"></i>
+                                    Send
+                                </button>
+                            </div>
+                            <textarea 
+                                v-model="apiRequest.body" 
+                                placeholder="Request body (JSON)" 
+                                class="w-full border rounded px-3 py-2 h-24"
+                            ></textarea>
+                        </div>
+
+                        <!-- API Response -->
+                        <div v-if="apiResponse" class="bg-gray-50 p-4 rounded-lg">
+                            <h4 class="font-medium mb-3">Response</h4>
+                            <div class="mb-2">
+                                <span class="text-sm font-medium">Status: </span>
+                                <span :class="apiResponse.status < 400 ? 'text-green-600' : 'text-red-600'">
+                                    {{ apiResponse.status }} {{ apiResponse.statusText }}
+                                </span>
+                            </div>
+                            <div class="code-block p-3">
+                                <pre class="text-xs">{{ JSON.stringify(apiResponse.data, null, 2) }}</pre>
+                            </div>
+                        </div>
+
+                        <!-- Quick API Tests -->
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <h4 class="font-medium mb-3">Quick Tests</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                <button 
+                                    @click="quickTest('health')"
+                                    class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+                                >
+                                    <i class="fas fa-heart"></i>
+                                    Health Check
+                                </button>
+                                <button 
+                                    @click="quickTest('users')"
+                                    class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                                    :disabled="!currentUser"
+                                >
+                                    <i class="fas fa-users"></i>
+                                    Get Users
+                                </button>
+                                <button 
+                                    @click="quickTest('channels')"
+                                    class="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700"
+                                    :disabled="!currentUser"
+                                >
+                                    <i class="fas fa-hashtag"></i>
+                                    Get Channels
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Logs Tab -->
+                    <div v-if="activeTab === 'logs'" class="space-y-6">
+                        <div class="flex justify-between items-center">
+                            <h3 class="text-lg font-semibold">Activity Logs</h3>
+                            <button 
+                                @click="clearLogs" 
+                                class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+                            >
+                                <i class="fas fa-trash"></i>
+                                Clear Logs
+                            </button>
+                        </div>
+                        
+                        <div class="bg-gray-900 text-green-400 p-4 rounded-lg font-mono text-sm h-96 overflow-y-auto">
+                            <div v-for="log in logs" :key="log.id" class="mb-1">
+                                <span class="text-gray-500">[{{ formatTime(log.timestamp) }}]</span>
+                                <span :class="{
+                                    'text-red-400': log.level === 'error',
+                                    'text-yellow-400': log.level === 'warn',
+                                    'text-blue-400': log.level === 'info',
+                                    'text-green-400': log.level === 'success'
+                                }">
+                                    {{ log.message }}
+                                </span>
+                            </div>
+                            <div v-if="logs.length === 0" class="text-gray-500 text-center py-8">
+                                No logs yet. Start using the application to see activity.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Login Modal -->
+        <div v-if="showLogin" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div class="bg-white rounded-lg p-6 w-96">
+                <h3 class="text-lg font-semibold mb-4">Login Required</h3>
+                <div class="space-y-4">
+                    <input 
+                        v-model="loginForm.email" 
+                        placeholder="Email" 
+                        type="email"
+                        class="w-full border rounded px-3 py-2"
+                    >
+                    <input 
+                        v-model="loginForm.password" 
+                        placeholder="Password" 
+                        type="password"
+                        class="w-full border rounded px-3 py-2"
+                    >
+                </div>
+                <div class="flex justify-end space-x-3 mt-6">
+                    <button 
+                        @click="showLogin = false"
+                        class="px-4 py-2 text-gray-600 hover:text-gray-800"
+                    >
+                        Cancel
+                    </button>
+                    <button 
+                        @click="login; showLogin = false"
+                        class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                    >
+                        Login
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Toast Notifications -->
+        <div class="fixed bottom-4 right-4 space-y-2 z-50">
+            <transition-group name="slide">
+                <div
+                    v-for="toast in toasts"
+                    :key="toast.id"
+                    :class="[
+                        'px-4 py-3 rounded shadow-lg text-white max-w-sm',
+                        toast.type === 'success' ? 'bg-green-600' : 
+                        toast.type === 'error' ? 'bg-red-600' : 
+                        toast.type === 'warning' ? 'bg-yellow-600' : 'bg-blue-600'
+                    ]"
+                >
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm">{{ toast.message }}</span>
+                        <button @click="removeToast(toast.id)" class="ml-2">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+            </transition-group>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
