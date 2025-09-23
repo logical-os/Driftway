@@ -1,42 +1,45 @@
 {
   "name": "driftway",
   "version": "1.0.0",
-  "description": "A TypeScript Node.js backend for a messaging service",
-  "main": "dist/server.js",
+  "description": "",
+  "main": "dist/index.js",
   "scripts": {
+    "start": "ts-node src/index.ts",
+    "dev": "nodemon src/index.ts",
     "build": "tsc",
-    "start": "node dist/server.js",
-    "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
-    "watch": "tsc --watch",
-    "clean": "rimraf dist",
-    "start-all": "node start.js",
-    "client": "cd client && node server.js"
+    "keygen": "node scripts/keyGen.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": [
-    "messaging",
-    "typescript",
-    "nodejs",
-    "socket.io",
-    "express"
-  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/logical-os/Driftway.git"
+  },
+  "keywords": [],
   "author": "",
-  "license": "MIT",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/logical-os/Driftway/issues"
+  },
+  "homepage": "https://github.com/logical-os/Driftway#readme",
   "dependencies": {
+    "bcryptjs": "^3.0.2",
     "cors": "^2.8.5",
-    "dotenv": "^16.3.1",
-    "express": "^4.18.2",
-    "socket.io": "^4.7.2",
-    "sqlite3": "^5.1.7",
-    "uuid": "^9.0.0"
+    "dotenv": "^17.2.2",
+    "express": "^5.1.0",
+    "express-rate-limit": "^8.1.0",
+    "helmet": "^8.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.18.2",
+    "socket.io": "^4.8.1"
   },
   "devDependencies": {
-    "@types/cors": "^2.8.13",
-    "@types/express": "^4.17.17",
-    "@types/node": "^20.4.8",
-    "@types/sqlite3": "^3.1.11",
-    "@types/uuid": "^9.0.2",
-    "rimraf": "^5.0.1",
-    "ts-node-dev": "^2.0.0",
-    "typescript": "^5.1.6"
+    "@types/bcryptjs": "^2.4.6",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.3",
+    "@types/jsonwebtoken": "^9.0.10",
+    "nodemon": "^3.1.10",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.2"
   }
 }

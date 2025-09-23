@@ -1,41 +1,27 @@
-export interface Message {
-  id: string;
-  conversationId: string;
-  senderId: string;
-  content: string; // This will store encrypted content on server
-  messageType: MessageType;
-  timestamp: Date;
-  editedAt?: Date;
-  isDeleted: boolean;
-  readBy: MessageRead[];
-  // Encryption metadata
-  encryptionIV?: string; // Initialization vector for decryption
-  isEncrypted: boolean; // Flag to indicate if message is encrypted
+import mongoose, { Document, Schema } from 'mongoose';
+
+export interface IMessage extends Document {
+    from: mongoose.Schema.Types.ObjectId;
+    channel: mongoose.Schema.Types.ObjectId;
+    content: string; // Encrypted content
+    timestamp: Date;
+    status: 'sent' | 'delivered' | 'read';
+    edited: boolean;
+    editedAt?: Date;
+    attachments: string[];
+    messageType: 'text' | 'image' | 'file' | 'system';
 }
 
-export interface MessageRead {
-  userId: string;
-  readAt: Date;
-}
+const MessageSchema: Schema = new Schema({
+    from: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    channel: { type: mongoose.Schema.Types.ObjectId, ref: 'Channel', required: true },
+    content: { type: String, required: true },
+    timestamp: { type: Date, default: Date.now },
+    status: { type: String, enum: ['sent', 'delivered', 'read'], default: 'sent' },
+    edited: { type: Boolean, default: false },
+    editedAt: { type: Date },
+    attachments: [{ type: String }],
+    messageType: { type: String, enum: ['text', 'image', 'file', 'system'], default: 'text' },
+});
 
-export enum MessageType {
-  TEXT = 'text',
-  IMAGE = 'image',
-  FILE = 'file',
-  SYSTEM = 'system'
-}
-
-export interface SendMessageRequest {
-  conversationId: string;
-  content: string; // Plaintext on client, will be encrypted before sending
-  messageType?: MessageType;
-  // Client-side encryption data (sent to server but not stored in plaintext)
-  encryptedContent?: string; // The actual encrypted content
-  encryptionIV?: string; // IV used for encryption
-}
-
-export interface EditMessageRequest {
-  content: string; // Plaintext on client, will be encrypted before sending
-  encryptedContent?: string; // The actual encrypted content
-  encryptionIV?: string; // IV used for encryption
-}
+export default mongoose.model<IMessage>('Message', MessageSchema);
