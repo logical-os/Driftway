@@ -1,0 +1,107 @@
+# The directory Mix will write compiled artifacts to.
+/_build/
+
+# If you run "mix test --cover", coverage assets end up here.
+/cover/
+
+# The directory Mix downloads your dependencies sources to.
+/deps/
+
+# Where third-party dependencies like ExDoc output generated docs.
+/doc/
+
+# Ignore .fetch files in case you like to edit your project deps locally.
+/.fetch
+
+# If the VM crashes, it generates a dump, let's ignore it too.
+erl_crash.dump
+
+# Also ignore archive artifacts (built via "mix archive.build").
+*.ez
+
+# Ignore package tarball (built via "mix hex.build").
+chat_service-*.tar
+
+# Temporary files, for example, from tests.
+/tmp/
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs
+*.log
+/logs/
+
+# Environment variables
+.env
+.env.local
+.env.production
+
+# Phoenix specific
+/priv/static/assets/
+/priv/static/cache_manifest.json
+
+# Secret files
+/config/*.secret.exs
+/config/prod.secret.exs
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Node.js (if using assets)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Compiled Python files (for monitoring scripts)
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Docker
+.dockerignore
+
+# Monitoring script temporary files
+monitoring_*.pid
+monitoring_*.lock
+
+# Elixir releases
+/_build/prod/
+/rel/
+
+# Clustering
+.erlang.cookie

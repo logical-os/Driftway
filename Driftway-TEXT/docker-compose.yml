@@ -1,0 +1,103 @@
+version: '3.8'
+
+services:
+  chat-service-1:
+    build: .
+    container_name: chat-service-node-1
+    ports:
+      - "4000:4000"
+      - "4369:4369"  # EPMD port
+      - "9001:9001"  # Distribution port
+    environment:
+      - NODE_NAME=chat1@chat-service-1
+      - COOKIE=super_secret_cookie_change_me
+      - PHX_HOST=localhost
+      - PORT=4000
+      - MIX_ENV=prod
+      - CLUSTER_STRATEGY=epmd
+      - CLUSTER_NODES=chat1@chat-service-1,chat2@chat-service-2,chat3@chat-service-3
+    networks:
+      - chat-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:4000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+
+  chat-service-2:
+    build: .
+    container_name: chat-service-node-2
+    ports:
+      - "4001:4000"
+      - "4370:4369"  # EPMD port
+      - "9002:9002"  # Distribution port
+    environment:
+      - NODE_NAME=chat2@chat-service-2
+      - COOKIE=super_secret_cookie_change_me
+      - PHX_HOST=localhost
+      - PORT=4000
+      - MIX_ENV=prod
+      - CLUSTER_STRATEGY=epmd
+      - CLUSTER_NODES=chat1@chat-service-1,chat2@chat-service-2,chat3@chat-service-3
+    networks:
+      - chat-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:4000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+    depends_on:
+      - chat-service-1
+
+  chat-service-3:
+    build: .
+    container_name: chat-service-node-3
+    ports:
+      - "4002:4000"
+      - "4371:4369"  # EPMD port  
+      - "9003:9003"  # Distribution port
+    environment:
+      - NODE_NAME=chat3@chat-service-3
+      - COOKIE=super_secret_cookie_change_me
+      - PHX_HOST=localhost
+      - PORT=4000
+      - MIX_ENV=prod
+      - CLUSTER_STRATEGY=epmd
+      - CLUSTER_NODES=chat1@chat-service-1,chat2@chat-service-2,chat3@chat-service-3
+    networks:
+      - chat-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:4000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+    depends_on:
+      - chat-service-1
+
+  nginx-load-balancer:
+    image: nginx:alpine
+    container_name: chat-load-balancer
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    networks:
+      - chat-network
+    depends_on:
+      - chat-service-1
+      - chat-service-2
+      - chat-service-3
+    restart: unless-stopped
+
+networks:
+  chat-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
