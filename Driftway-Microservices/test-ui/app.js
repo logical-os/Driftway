@@ -4,7 +4,7 @@ createApp({
     data() {
         return {
             // API Configuration
-            useSimulation: true, // Set to true to use simulation server
+            useSimulation: false, // Set to true to use simulation server
             apiBaseUrl: 'http://localhost:8080',
             textServiceUrl: 'http://localhost:4000',
             voiceServiceUrl: 'http://localhost:9090',

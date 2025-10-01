@@ -1,7 +1,13 @@
 #pragma once
 
 #include <string>
-#include <functional>
+#include <memory>
+#include <thread>
+
+// Forward declarations
+namespace httplib {
+    class Server;
+}
 
 namespace driftway {
 
@@ -14,15 +20,14 @@ public:
     
     void start();
     void stop();
-    void addRoute(const std::string& path, const std::string& method, 
-                        std::function<std::string(const std::string&)> handler);
-    std::string handleRequest(const std::string& path, const std::string& method, 
-                                   const std::string& body);
 
 private:
+    void setup_routes();
+
     int port_;
     VoiceServer* voice_server_;
-    bool running_;
+    std::unique_ptr<httplib::Server> server_;
+    std::thread server_thread_;
 };
 
 } // namespace driftway

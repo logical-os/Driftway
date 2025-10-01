@@ -219,6 +219,7 @@ void VoiceServer::InitializeComponents() {
     // Initialize HTTP server
     std::cout << "Starting HTTP server..." << std::endl;
     http_server_ = std::make_unique<HttpServer>(config_.http_port, this);
+    http_server_->start();
     
     // Initialize audio processor
     std::cout << "Initializing audio processor..." << std::endl;
@@ -241,6 +242,9 @@ void VoiceServer::ShutdownComponents() {
     // Shutdown components in reverse order
     webrtc_handler_.reset();
     audio_processor_.reset();
+    if(http_server_) {
+        http_server_->stop();
+    }
     http_server_.reset();
     redis_client_.reset();
     db_client_.reset();

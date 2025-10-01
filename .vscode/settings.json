@@ -1,3 +1,20 @@
 {
-    "discord.enabled": true
+    "discord.enabled": true,
+    "cmake.sourceDirectory": "C:/Users/mrblo/Documents/testy/Driftway/Driftway-Microservices/voice-channels",
+    "files.associations": {
+        "map": "cpp",
+        "functional": "cpp",
+        "unordered_map": "cpp",
+        "regex": "cpp",
+        "vector": "cpp",
+        "utility": "cpp",
+        "string": "cpp",
+        "chrono": "cpp",
+        "cstddef": "cpp",
+        "iomanip": "cpp",
+        "memory": "cpp",
+        "random": "cpp",
+        "thread": "cpp",
+        "xstring": "cpp"
+    }
 }
