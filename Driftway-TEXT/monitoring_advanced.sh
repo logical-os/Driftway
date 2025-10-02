@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Advanced Chat Service Monitor v2.0 - Enhanced htop-like interface
-Features: Real-time metrics, log analysis, alerting, historical data, clustering info
+Features: Real-time metrics, log analysis, alerting, historical data, clustering inf
 """
 
 import asyncio
